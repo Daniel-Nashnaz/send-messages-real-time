@@ -3,14 +3,14 @@ const dotenv = require("dotenv");
 const functionsSendEmail = require("../modules/emails");
 const nodemailer = require('nodemailer');
 const axios = require('axios');
-const { startAnalyzeData } = require("../modules/test");
+const { startAnalyzeData } = require("../modules/firstAnalysisInfo");
 const cron = require('node-cron');
 const router = express.Router();
 const functionsOfSql = require("../modules/functionOfDB");
 let task;
 let count = 0;
 
-const DatabaseConnection  = require("../configuration/tedt");
+
 
 /*
 router.get("/", async (req, res) => {
@@ -28,12 +28,11 @@ router.get("/allRealTimeInfoForUserId", async (req, res) => {
 
 */
 
-task = cron.schedule("*/15 * * * * *", () => {
+task = cron.schedule("*/10 * * * * *", async() => {
   console.log("running a task every 10 seconds");
-  startAnalyzeData(count).then(res => {
-    count = res;
-    console.log(count);
-  });
+  count = await startAnalyzeData(count);
+  console.log(count);
+
 }, {
   scheduled: false
 });
@@ -48,7 +47,11 @@ router.get("/startServerCheckDataRealTime", async (req, res) => {
 router.get("/stopServerCheckDataRealTime", async (req, res) => {
   try {
     task.stop();
-    res.status(200).json({ message: 'Server stoped!' })
+    res.status(200).json({ message: 'Server stoped!' });
+    setTimeout(() => {
+      //close conection to sql server after 5 sec
+      functionsOfSql.closePool();
+    }, 5000);
   } catch (error) {
     res.status(500).json({ error: '' + error })
   }
@@ -56,9 +59,11 @@ router.get("/stopServerCheckDataRealTime", async (req, res) => {
 
 });
 router.get("/send", async (req, res) => {
+  
+
 
   //const tripRecord = new TripRecord(2, 156,'00h:00m:35s', 10.5, 32.987714, 35.693244, 10, 10, 12, 45, 24);
-  //let dataFromDB = await startAnalyzeData(0);
+  //let dataFromDB = await getAllInfoIsNull(0);
   //console.log(dataFromDB);
   //const x = await startAnalyzeData(1550);
   //console.log(x);
@@ -83,11 +88,6 @@ router.get("/send", async (req, res) => {
   console.log(result);
 */
 
-const db = new DatabaseConnection();
-await db.connect();
-const result = await db.query('SELECT * FROM Users');
-console.log(result);
-await db.disconnect();
 })
 
 router.get("/test", async (req, res) => {
@@ -182,4 +182,8 @@ router.get("/email", async (req, res) => {
   suddenBraking:10,
   userID: 2
 }*/
+
+//process.on('SIGTERM', functionsOfSql.closePool());
+//process.on('SIGINT', functionsOfSql.closePool());
+
 module.exports = router;

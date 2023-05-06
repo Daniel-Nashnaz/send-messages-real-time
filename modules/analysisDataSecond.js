@@ -1,5 +1,5 @@
 const axios = require('axios');
-const functionsOfSql = require("./functionOfDB");
+const functionsOfSql = require("../database/SingletonDatabase");
 const { LOW_LEVEL,
     MEDIUM_LEVEL,
     HIGT_LEVEL,
@@ -35,6 +35,7 @@ async function analyzeIfNeedSendMessage(userTrip, userInfo) {
     if (flagChangeTrip) {
         saveTripId = userTrip.tripID;
         flagChangeTrip = false;
+        //insert to table only if tripID not exists!
         await functionsOfSql.insertAlertData(saveTripId, 0, 0, 0);
     } else {
         let dataFromDB = await functionsOfSql.getInfoOfRealTimeByTripID(userTrip.tripID);
@@ -47,7 +48,7 @@ async function analyzeIfNeedSendMessage(userTrip, userInfo) {
     collisionWarningCount = userTrip.forwardDirections + userTrip.pedestrianAndCyclistCollision + dataBefore.collisionWarningCount;
     speedWarningLaneDepartureCount = userTrip.exceededSpeedLimit + userTrip.laneDeparture + dataBefore.speedWarningLaneDepartureCount;
     suddenBrakingCount = userTrip.suddenBraking + dataBefore.suddenBrakingCount;
-
+    sendErrors = {};
 
     //Minimal notifications
     if (userInfoAboutAlert.AlertLevel === LOW_LEVEL) {
@@ -64,7 +65,7 @@ async function analyzeIfNeedSendMessage(userTrip, userInfo) {
         ifSpeedOrLane(HIGH_LEVEL_SPEED_OR_LANE);
         ifCollisions(HIGH_LEVEL_COLLISIONS);
         ifSuddenBraking(HIGH_LEVEL_SUDDEN_BRAKIMG);
-    } 
+    }
     // console.log(collisionWarningCount);
     // console.log(speedWarningLaneDepartureCount);
     // console.log(suddenBrakingCount);
@@ -74,10 +75,12 @@ async function analyzeIfNeedSendMessage(userTrip, userInfo) {
         await saveDataInObjToUseLater();
         return;
     }
-    if (ifNoChangeWithDataBefore()) {
-        await saveDataInObjToUseLater();
-        return;
-    }
+    //If he exceeded the limit of the warnings then after each time 
+    //he exceeds he will be sent a message! 
+    /* if (ifNoChangeWithDataBefore()) {
+         await saveDataInObjToUseLater();
+         return;
+     }*/
     await saveDataInObjToUseLater();
     messageArrayToDB = await generatesMessage(userTrip, sendErrors);
     x.push(messageArrayToDB);
@@ -98,6 +101,7 @@ async function saveDataInObjToUseLater() {
     dataBefore.suddenBrakingCount = suddenBrakingCount;
 
 };
+
 
 function ifNoChangeWithDataBefore() {
 
@@ -136,7 +140,7 @@ function ifNoChangeWithDataBefore() {
         dataBefore.speedWarningLaneDepartureCount === speedWarningLaneDepartureCount) {
         return true;
     }
-    if (dataBefore.collisionWarningCount === collisionWarningCount &&
+    /*if (dataBefore.collisionWarningCount === collisionWarningCount &&
         (speedWarningLaneDepartureCount > speedOrLane ||
             suddenBrakingCount > braking)) {
         sendErrors.collisionWarning = '';
@@ -154,7 +158,7 @@ function ifNoChangeWithDataBefore() {
             suddenBrakingCount > braking)) {
         sendErrors.speedOrLane = '';
         return false;
-    }
+    }*/
     return false;
 };
 function ifSuddenBraking(number) {
@@ -162,6 +166,8 @@ function ifSuddenBraking(number) {
 
         if (suddenBrakingCount >= number) {
             sendErrors.suddenBraking = 'Sudden braking happened';
+            suddenBrakingCount = 0;
+
         }
     }
 };
@@ -170,6 +176,7 @@ function ifCollisions(number) {
 
         if (collisionWarningCount >= number) {
             sendErrors.collisionWarning = 'Clings to the car ' + 'And' + ' Clings to pedestrians and bicycles';
+            collisionWarningCount = 0;
             return;
         }
 
@@ -178,6 +185,7 @@ function ifCollisions(number) {
 
         if (collisionWarningCount >= number) {
             sendErrors.collisionWarning = 'Clings to the car';
+            collisionWarningCount = 0;
             return;
         }
 
@@ -185,6 +193,8 @@ function ifCollisions(number) {
     if (userInfoAboutAlert.PedestrianAndCyclistCollision) {
         if (collisionWarningCount >= number) {
             sendErrors.collisionWarning = 'Clings to pedestrians and bicycles';
+            collisionWarningCount = 0;
+            return;
         }
     }
 };
@@ -193,6 +203,7 @@ function ifSpeedOrLane(number) {
 
         if (speedWarningLaneDepartureCount >= number) {
             sendErrors.speedOrLane = 'The speed exceeds the limit ' + 'And' + ' Departure from the lane';
+            speedWarningLaneDepartureCount = 0;
             return;
         }
 
@@ -201,6 +212,7 @@ function ifSpeedOrLane(number) {
 
         if (speedWarningLaneDepartureCount >= number) {
             sendErrors.speedOrLane = 'The speed exceeds the limit ';
+            speedWarningLaneDepartureCount = 0;
             return;
         }
 
@@ -208,6 +220,7 @@ function ifSpeedOrLane(number) {
     if (userInfoAboutAlert.LaneDeparture) {
         if (speedWarningLaneDepartureCount >= number) {
             sendErrors.speedOrLane = 'Departure from the lane';
+            speedWarningLaneDepartureCount = 0;
         }
     }
 };

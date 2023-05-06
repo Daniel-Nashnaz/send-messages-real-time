@@ -2,4 +2,5 @@
 /.env
 /package-lock.json
 /package-lock
-/configuration/tedt.js
+/modules/functionOfDB.js
+/email.js
