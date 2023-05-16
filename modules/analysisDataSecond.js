@@ -88,7 +88,7 @@ async function analyzeIfNeedSendMessage(userTrip, userInfo) {
     //console.log(dataBefore);
 
     messageArrayToDB.forEach(async (message) => {
-        await functionsOfSql.insertMessageToTable(userTrip.userID, message.sebject, message.body, null);
+        await functionsOfSql.insertMessageToTable(userTrip.userID, message.subject, message.body, null);
     });
     console.log(x);
 
@@ -236,10 +236,17 @@ async function generatesMessage(userTrip, sendErrors) {
     for (const err in sendErrors) {
         if (sendErrors[err].length > 0) {
             message.email = userInfo[0].AdministratorEmail;
-            message.sebject = sendErrors[err];
-            message.body = `Driver: ${userInfo[0].FullName}\nCar number: ${userInfo[0].VehicleNumber}\nCar name: ${userInfo[0].VehicleName},` +
-                `\nError time from the start of the trip: ${timeFromStart}\n km from the start: ${distanceTraveledMile}` +
-                `\nError location:${await getAddress(latitude, longitude)}`
+                message.subject = `${sendErrors[err]}`;
+                message.body = `<html>
+                    <body>
+                        <h2>Driver: ${userInfo[0].FullName}</h2>
+                        <p>Car number: ${userInfo[0].VehicleNumber}</p>
+                        <p>Car name: ${userInfo[0].VehicleName}</p>
+                        <p>Error time from the start of the trip: ${timeFromStart}</p>
+                        <p>Kilometers from the start: ${distanceTraveledMile}</p>
+                        <p>Error location: ${await getAddress(latitude, longitude)}</p>
+                    </body>
+                </html>`;
             messageArray.push(message);
             message = {};
         }
