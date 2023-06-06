@@ -1,8 +1,5 @@
 const express = require("express");
-const dotenv = require("dotenv");
 const functionsSendEmail = require("../modules/emails");
-const nodemailer = require('nodemailer');
-const axios = require('axios');
 const { startAnalyzeData } = require("../modules/firstAnalysisInfo");
 const cron = require('node-cron');
 const router = express.Router();

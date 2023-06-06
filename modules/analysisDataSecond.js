@@ -2,7 +2,6 @@ const axios = require('axios');
 const functionsOfSql = require("../database/SingletonDatabase");
 const { LOW_LEVEL,
     MEDIUM_LEVEL,
-    HIGT_LEVEL,
     LOW_LEVEL_SUDDEN_BRAKIMG,
     LOW_LEVEL_COLLISIONS,
     LOW_LEVEL_SPEED_OR_LANE,
@@ -11,7 +10,8 @@ const { LOW_LEVEL,
     MEDIUM_LEVEL_SPEED_OR_LANE,
     HIGH_LEVEL_SUDDEN_BRAKIMG,
     HIGH_LEVEL_COLLISIONS,
-    HIGH_LEVEL_SPEED_OR_LANE } = require("../constants/definitions");
+    HIGH_LEVEL_SPEED_OR_LANE, 
+    HIGH_LEVEL} = require("../constants/definitions");
 
 
 let collisionWarningCount;
@@ -61,7 +61,7 @@ async function analyzeIfNeedSendMessage(userTrip, userInfo) {
         ifCollisions(MEDIUM_LEVEL_COLLISIONS);
         ifSuddenBraking(MEDIUM_LEVEL_SUDDEN_BRAKIMG);
         //Maximum notifications:
-    } else if (userInfoAboutAlert.AlertLevel === HIGT_LEVEL) {
+    } else if (userInfoAboutAlert.AlertLevel === HIGH_LEVEL) {
         ifSpeedOrLane(HIGH_LEVEL_SPEED_OR_LANE);
         ifCollisions(HIGH_LEVEL_COLLISIONS);
         ifSuddenBraking(HIGH_LEVEL_SUDDEN_BRAKIMG);
@@ -244,7 +244,7 @@ async function generatesMessage(userTrip, sendErrors) {
                         <p>Car name: ${userInfo[0].VehicleName}</p>
                         <p>Error time from the start of the trip: ${timeFromStart}</p>
                         <p>Kilometers from the start: ${distanceTraveledMile}</p>
-                        <p>Error location: ${await getAddress(latitude, longitude)}</p>
+                        <p>Error location: <a>${await getAddress(latitude, longitude)}</a></p>
                     </body>
                 </html>`;
             messageArray.push(message);

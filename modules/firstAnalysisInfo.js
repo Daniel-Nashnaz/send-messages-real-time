@@ -1,15 +1,13 @@
-const config = require("../configuration/sqlServerConfig")
+
 const functionsOfSql = require("../database/SingletonDatabase");
 const functionsOfAnalysisData = require("./analysisDataSecond");
-const sql = require('mssql');
 
 const TripRecord = require('./tripRecord');
 let lastId = 0;
 
-async function 
-startAnalyzeData(idOfTableRealTimeInfo) {
-   // const result = await functionsOfSql.getAllInfoIsNull(idOfTableRealTimeInfo);//.then(async (result) => {
-    const result = await functionsOfSql.getAllInfoByUserIdIsNull(2, idOfTableRealTimeInfo);//.then(async (result) => {
+async function startAnalyzeData(idOfTableRealTimeInfo) {
+    const result = await functionsOfSql.getAllInfoIsNull(idOfTableRealTimeInfo);//.then(async (result) => {
+    //const result = await functionsOfSql.getAllInfoByUserIdIsNull(2, idOfTableRealTimeInfo);//.then(async (result) => {
     if(result.length === 0){
         console.log("no more!!! ");
         return idOfTableRealTimeInfo;
